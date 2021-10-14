@@ -1,8 +1,8 @@
 const express = require('express');
-const MongoClient = require('mongodb').MongoClient;
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const admin = require('firebase-admin');
+const MongoClient = require('mongodb').MongoClient;
 require('dotenv').config()
 
 // console.log(process.env.DB_PASS)
@@ -12,14 +12,16 @@ const port = 5000;
 app.use(cors());
 app.use(bodyParser.json());
 
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.msfnz.mongodb.net/${process.env.DATABASE_NAME}?retryWrites=true&w=majority`;
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+
 // add firebase admin
 var serviceAccount = require("./burj-al-khalifa-21526-firebase-adminsdk-qjj5a-b2afae4b9c.json");
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
 });
 
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.msfnz.mongodb.net/${process.env.DATABASE_NAME}?retryWrites=true&w=majority`;
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+
 client.connect(err => {
     const collection = client.db(`${process.env.DATABASE_NAME}`).collection(`${process.env.DATABASE_COLLECTION_NAME}`);
     console.log('Database connected successfully');
@@ -34,7 +36,6 @@ client.connect(err => {
             })
         // console.log(newBooking);
     })
-
 
     // Read data to show UI
     app.get('/bookings', (req, res) => {
@@ -52,7 +53,7 @@ client.connect(err => {
                 .then((decodedToken) => {
                     const tokenEmail = decodedToken.email;
                     const queryEmail = req.query.email;
-                    console.log(tokenEmail,queryEmail);
+                    console.log(tokenEmail, queryEmail);
                     if (tokenEmail == req.query.email) {
                         collection.find({ email: req.query.email })
                             .toArray((error, documents) => {
@@ -60,7 +61,7 @@ client.connect(err => {
                                 console.log(documents)
                             })
                     }
-                    else{
+                    else {
                         res.status(401).send('Un-authorization access');
                     }
                 })
@@ -68,7 +69,7 @@ client.connect(err => {
                     res.status(401).send('Un-authorization access');
                 });
         }
-        else{
+        else {
             res.status(401).send('Un-authorization access');
         }
     })
